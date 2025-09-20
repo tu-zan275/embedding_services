@@ -1,0 +1,94 @@
+# milvus_client.py
+from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType, utility
+from embedding import get_embedding
+
+# =====================
+# Cấu hình
+# =====================
+COLLECTION_NAME = "course_chunks"
+DIM = 384  # intfloat/multilingual-e5-small có dim=384
+
+# Kết nối Milvus
+connections.connect("default", host="localhost", port="19530")
+
+
+# =====================
+# Tạo Collection
+# =====================
+def create_collection():
+    # Nếu collection đã tồn tại thì chỉ load
+    if utility.has_collection(COLLECTION_NAME):
+        collection = Collection(COLLECTION_NAME)
+        collection.load()
+        return collection
+
+    fields = [
+        FieldSchema(name="id", dtype=DataType.INT64, is_primary=True, auto_id=True),
+        FieldSchema(name="course_id", dtype=DataType.INT64),
+        FieldSchema(name="chunk_index", dtype=DataType.INT64),
+        FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2000),
+        FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=DIM),
+    ]
+
+    schema = CollectionSchema(fields, description="Course Chunks Embeddings")
+    collection = Collection(COLLECTION_NAME, schema, consistency_level="Strong")
+
+    # Tạo index cho vector search
+    collection.create_index(
+        field_name="embedding",
+        index_params={"index_type": "IVF_FLAT", "metric_type": "COSINE", "params": {"nlist": 100}}
+    )
+    collection.load()
+    return collection
+
+
+# =====================
+# Insert dữ liệu
+# =====================
+def insert_course_chunks(course_id: int, chunks: list[str]):
+    collection = Collection(COLLECTION_NAME)
+
+    data = [
+        [],  # id auto
+        [],  # course_id
+        [],  # chunk_index
+        [],  # text
+        [],  # embedding
+    ]
+
+    for idx, chunk in enumerate(chunks):
+        emb = get_embedding(chunk, is_query=False)
+        data[0].append(None)          # id auto
+        data[1].append(course_id)     # course_id
+        data[2].append(idx)           # chunk_index
+        data[3].append(chunk)         # text
+        data[4].append(emb)           # embedding
+
+    collection.insert(data)
+    collection.flush()
+
+
+# =====================
+# Search
+# =====================
+def search(query: str, top_k=3):
+    collection = Collection(COLLECTION_NAME)
+    embedding = get_embedding(query, is_query=True)
+
+    results = collection.search(
+        [embedding],
+        anns_field="embedding",
+        param={"metric_type": "COSINE", "params": {"nprobe": 10}},
+        limit=top_k,
+        output_fields=["text", "course_id", "chunk_index"]
+    )
+
+    hits = []
+    for hit in results[0]:
+        hits.append({
+            "text": hit.entity.get("text"),
+            "course_id": hit.entity.get("course_id"),
+            "chunk_index": hit.entity.get("chunk_index"),
+            "score": hit.score
+        })
+    return hits
