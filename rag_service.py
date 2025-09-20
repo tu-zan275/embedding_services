@@ -3,7 +3,9 @@ from embedding import get_embedding
 from openai import OpenAI
 import os
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+OPENAI_API_KEY = "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"
+#client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 def rag_answer(query: str, top_k=3):
     # load collection

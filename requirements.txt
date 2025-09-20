@@ -3,3 +3,4 @@ uvicorn
 pymilvus
 sentence-transformers
 torch
+openai
