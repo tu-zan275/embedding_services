@@ -7,6 +7,10 @@ app = FastAPI()
 # Tạo collection khi start
 create_collection()
 
+@app.get("/")
+def root():
+    return {"status": "ok", "message": "RAG API is running"}
+    
 @app.post("/insert")
 def insert(course_id: int, chunks: list[str]):
     """
