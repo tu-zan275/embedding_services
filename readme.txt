@@ -27,3 +27,15 @@ docker ps
 Kết quả sẽ có milvus-standalone, milvus-minio, milvus-etcd.
 
 ===========================
+wsl
+# Tạo folder cho venv (ví dụ tên venv)
+python3 -m venv venv
+
+# Kích hoạt virtualenv
+source venv/bin/activate  # Linux / WSL
+
+# Kiểm tra pip đang dùng venv
+which pip
+
+# Cài các package từ requirements.txt
+pip install -r requirements.txt
