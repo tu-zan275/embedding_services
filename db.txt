@@ -1,0 +1,6 @@
+chunk_id	int64 (PK)	id tự sinh
+course_id	int64	id của khóa học
+chunk_index	int64	thứ tự đoạn trong khóa học
+created_date	string	ngày tạo
+text_chunk	string	nội dung đoạn text
+embedding	float_vector	vector của đoạn
