@@ -30,6 +30,7 @@ def create_collection():
         FieldSchema(name="chunk_index", dtype=DataType.INT64),
         FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2000),
         FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=DIM),
+        FieldSchema(name="course_name", dtype=DataType.VARCHAR, max_length=255),  # metadata
     ]
 
     schema = CollectionSchema(fields, description="Course Chunks Embeddings")
@@ -46,15 +47,16 @@ def create_collection():
 # =====================
 # Insert dữ liệu
 # =====================
-def insert_course_chunks(course_id: int, chunks: list[str]):
+def insert_course_chunks(course_id: int, chunks: list[str], course_name: str):
     collection = Collection(COLLECTION_NAME)
 
-    # Dữ liệu chỉ gửi 4 field, bỏ id auto
+    # Dữ liệu chỉ gửi 5 field, bỏ id auto
     data = [
         [],  # course_id
         [],  # chunk_index
         [],  # text
         [],  # embedding
+        [],  # course_name
     ]
 
     for idx, chunk in enumerate(chunks):
@@ -63,6 +65,7 @@ def insert_course_chunks(course_id: int, chunks: list[str]):
         data[1].append(idx)           # chunk_index
         data[2].append(chunk)         # text
         data[3].append(emb)           # embedding
+        data[4].append(course_name)   # course_name
 
         # Debug info
         if idx == 0:
@@ -74,26 +77,51 @@ def insert_course_chunks(course_id: int, chunks: list[str]):
     print(f"Inserted {len(chunks)} chunks. Total entities:", collection.num_entities)
 
 # =====================
-# Search
+# Search + build context
 # =====================
-def search(query: str, top_k=3):
+def search(query: str, top_k=5):
+    """
+    Tìm kiếm các chunks gần nhất với query, trả về context đầy đủ cho AI.
+    """
     collection = Collection(COLLECTION_NAME)
     embedding = get_embedding(query, is_query=True)
 
+    # Nếu bạn thêm category metadata, hãy include vào output_fields
     results = collection.search(
         [embedding],
         anns_field="embedding",
         param={"metric_type": "COSINE", "params": {"nprobe": 10}},
         limit=top_k,
-        output_fields=["text", "course_id", "chunk_index"]
+        output_fields=["text", "course_id", "chunk_index", "course_name"]  # + "category" nếu có
     )
 
+    contexts = []
     hits = []
+
     for hit in results[0]:
+        course_name = hit.entity.get("course_name")
+        chunk_index = hit.entity.get("chunk_index")
+        text = hit.entity.get("text")
+        course_id = hit.entity.get("course_id")
+        score = hit.score
+
+        # Build context string cho AI
+        ctx = f"Course: {course_name} (ID: {course_id})\nChunk {chunk_index}: {text}"
+        contexts.append(ctx)
+
+        # Lưu thông tin chi tiết cho debug hoặc trả về API
         hits.append({
-            "text": hit.entity.get("text"),
-            "course_id": hit.entity.get("course_id"),
-            "chunk_index": hit.entity.get("chunk_index"),
-            "score": hit.score
+            "course_name": course_name,
+            "course_id": course_id,
+            "chunk_index": chunk_index,
+            "text": text,
+            "score": score
         })
-    return hits
+
+    # Kết hợp các context lại
+    context_text = "\n\n".join(contexts)
+
+    return {
+        "context_text": context_text,  # dùng để đưa vào LLM
+        "hits": hits                    # chi tiết từng hit, nếu cần
+    }

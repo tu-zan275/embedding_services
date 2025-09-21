@@ -26,7 +26,8 @@ def insert(payload: InsertPayload):
     try:
         course_id = payload.course_id
         chunks = payload.chunks
-        insert_course_chunks(course_id, chunks)
+        course_name = payload.course_name
+        insert_course_chunks(course_id, chunks, course_name)
         return {"status": "ok", "course_id": course_id, "chunks_count": len(chunks)}
     except Exception as e:
         return {"status": "error", "detail": str(e)}

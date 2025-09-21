@@ -17,6 +17,7 @@ fields = [
     FieldSchema(name="chunk_index", dtype=DataType.INT64),
     FieldSchema(name="text", dtype=DataType.VARCHAR, max_length=2000),
     FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=384),
+    FieldSchema(name="course_name", dtype=DataType.VARCHAR, max_length=255),
 ]
 
 schema = CollectionSchema(fields, description="Course Chunks Embeddings")
