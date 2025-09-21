@@ -19,7 +19,6 @@ connections.connect("default", host=os.getenv("DB_HOST"), port="19530")
 # Tạo Collection
 # =====================
 def create_collection():
-    # Nếu collection đã tồn tại thì chỉ load
     if utility.has_collection(COLLECTION_NAME):
         collection = Collection(COLLECTION_NAME)
         collection.load()
@@ -44,15 +43,14 @@ def create_collection():
     collection.load()
     return collection
 
-
 # =====================
 # Insert dữ liệu
 # =====================
 def insert_course_chunks(course_id: int, chunks: list[str]):
     collection = Collection(COLLECTION_NAME)
 
+    # Dữ liệu chỉ gửi 4 field, bỏ id auto
     data = [
-        [],  # id auto
         [],  # course_id
         [],  # chunk_index
         [],  # text
@@ -61,20 +59,19 @@ def insert_course_chunks(course_id: int, chunks: list[str]):
 
     for idx, chunk in enumerate(chunks):
         emb = get_embedding(chunk, is_query=False)
-        data[0].append(None)          # id auto
-        data[1].append(course_id)     # course_id
-        data[2].append(idx)           # chunk_index
-        data[3].append(chunk)         # text
-        data[4].append(emb)           # embedding
+        data[0].append(course_id)     # course_id
+        data[1].append(idx)           # chunk_index
+        data[2].append(chunk)         # text
+        data[3].append(emb)           # embedding
 
-        print("Data lengths:")
-        print(len(data[0]), len(data[1]), len(data[2]), len(data[3]), len(data[4]))
-        print("Embedding dim:", len(data[4][0]))  # đảm bảo đúng 384
-
+        # Debug info
+        if idx == 0:
+            print("Embedding dim check:", len(emb))  # phải = 384
 
     collection.insert(data)
     collection.flush()
-
+    collection.load()
+    print(f"Inserted {len(chunks)} chunks. Total entities:", collection.num_entities)
 
 # =====================
 # Search
