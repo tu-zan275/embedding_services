@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from rag_service import rag_answer
 from milvus_client import insert_course_chunks, create_collection
 from models.requests.InsertPayload import InsertPayload
+from models.requests.AskPayload import AskPayload
 
 app = FastAPI()
 
@@ -31,6 +32,15 @@ def insert(payload: InsertPayload):
         return {"status": "error", "detail": str(e)}
 
 @app.post("/ask")
-def ask(query: str):
-    answer = rag_answer(query)
-    return answer
+def ask(payload: AskPayload):
+    """
+    Ví dụ payload JSON:
+    {
+        "query": "Explain Newton's law"
+    }
+    """
+    try:
+        answer = rag_answer(payload.query)
+        return {"status": "ok", "query": payload.query, "answer": answer}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
