@@ -40,6 +40,7 @@ def ask(payload: AskPayload):
     }
     """
     try:
+        print("ask: ", payload.query)
         answer = rag_answer(payload.query)
         return {"status": "ok", "query": payload.query, "answer": answer}
     except Exception as e:
