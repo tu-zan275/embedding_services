@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from rag_service import rag_answer
 from milvus_client import insert_course_chunks, create_collection
+from InsertPayload import InsertPayload  # import model từ file khác
+
 
 app = FastAPI()
 
@@ -12,7 +14,7 @@ def root():
     return {"status": "ok", "message": "RAG API is running"}
     
 @app.post("/insert")
-def insert(course_id: int, chunks: list[str]):
+def insert(payload: InsertPayload):
     """
     Insert nhiều chunks vào course.
     Ví dụ payload JSON:
@@ -21,6 +23,8 @@ def insert(course_id: int, chunks: list[str]):
         "chunks": ["Nội dung 1", "Nội dung 2"]
     }
     """
+    course_id = payload.course_id
+    chunks = payload.chunks
     insert_course_chunks(course_id, chunks)
     return {"status": "ok", "course_id": course_id, "chunks_count": len(chunks)}
 
