@@ -24,10 +24,15 @@ def rag_answer(query: str, top_k=3):
     # build context
     contexts = []
     for hit in results[0]:
-        contexts.append(
-            f"(Course {hit.entity.get('course_id')}, Chunk {hit.entity.get('chunk_index')}): {hit.entity.get('text')}"
-        )
+        course_name = hit.entity.get("course_name")  # metadata
+        course_id = hit.entity.get("course_id")
+        chunk_index = hit.entity.get("chunk_index")
+        text = hit.entity.get("text")
 
+        # Tạo context rõ ràng cho AI
+        contexts.append(
+            f"Khóa học: {course_name} (ID: {course_id})\nChunk {chunk_index}: {text}"
+        )
 
     context_text = "\n".join(contexts)
 
@@ -38,7 +43,7 @@ Người dùng hỏi: "{query}"
 
 Dựa trên dữ liệu trong các khóa học:
 {context_text}
-
+    
 Hãy trả lời ngắn gọn, chính xác, và chỉ dựa vào thông tin trên.
 """
 

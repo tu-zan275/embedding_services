@@ -20,6 +20,7 @@ def insert(payload: InsertPayload):
     Ví dụ payload JSON:
     {
         "course_id": 1,
+        "course_name": "course_name",
         "chunks": ["Nội dung 1", "Nội dung 2"]
     }
     """
