@@ -4,6 +4,7 @@ from embedding import get_embedding
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
 
 # =====================
 # Cấu hình
@@ -13,7 +14,6 @@ DIM = 384  # intfloat/multilingual-e5-small có dim=384
 
 # Kết nối Milvus
 connections.connect("default", host=os.getenv("DB_HOST"), port="19530")
-
 
 # =====================
 # Tạo Collection
