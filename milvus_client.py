@@ -1,6 +1,8 @@
 # milvus_client.py
 from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType, utility
 from embedding import get_embedding
+import os
+
 
 # =====================
 # Cấu hình
@@ -9,7 +11,7 @@ COLLECTION_NAME = "course_chunks"
 DIM = 384  # intfloat/multilingual-e5-small có dim=384
 
 # Kết nối Milvus
-connections.connect("default", host="localhost", port="19530")
+connections.connect("default", host=os.getenv("DB_HOST"), port="19530")
 
 
 # =====================

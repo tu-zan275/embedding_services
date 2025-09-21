@@ -3,8 +3,6 @@ from embedding import get_embedding
 from openai import OpenAI
 import os
 
-load_dotenv()
-
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def rag_answer(query: str, top_k=3):
