@@ -67,6 +67,11 @@ def insert_course_chunks(course_id: int, chunks: list[str]):
         data[3].append(chunk)         # text
         data[4].append(emb)           # embedding
 
+        print("Data lengths:")
+        print(len(data[0]), len(data[1]), len(data[2]), len(data[3]), len(data[4]))
+        print("Embedding dim:", len(data[4][0]))  # đảm bảo đúng 384
+
+
     collection.insert(data)
     collection.flush()
 
