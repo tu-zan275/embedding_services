@@ -3,6 +3,7 @@ from embedding import get_embedding
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+#from special_contexts import special_contexts
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
@@ -27,7 +28,10 @@ def rag_answer(query: str, top_k=3):
             f"(Course {hit.entity.get('course_id')}, Chunk {hit.entity.get('chunk_index')}): {hit.entity.get('text')}"
         )
 
+
     context_text = "\n".join(contexts)
+
+    #context_text += special_contexts(query)
 
     prompt = f"""Bạn là trợ lý AI cho hệ thống khóa học.
 Người dùng hỏi: "{query}"
