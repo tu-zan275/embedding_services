@@ -1,8 +1,7 @@
 from fastapi import FastAPI
 from rag_service import rag_answer
 from milvus_client import insert_course_chunks, create_collection
-from InsertPayload import InsertPayload  # import model từ file khác
-
+from models.requests.InsertPayload import InsertPayload
 
 app = FastAPI()
 
