@@ -2,6 +2,7 @@
 from pymilvus import connections, Collection, FieldSchema, CollectionSchema, DataType, utility
 from embedding import get_embedding
 import os
+from dotenv import load_dotenv
 
 
 # =====================

@@ -2,6 +2,7 @@ from pymilvus import Collection
 from embedding import get_embedding
 from openai import OpenAI
 import os
+from dotenv import load_dotenv
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
