@@ -11,7 +11,7 @@ create_collection()
 @app.get("/")
 def root():
     return {"status": "ok", "message": "RAG API is running"}
-    
+
 @app.post("/insert")
 def insert(payload: InsertPayload):
     """
@@ -22,10 +22,13 @@ def insert(payload: InsertPayload):
         "chunks": ["Nội dung 1", "Nội dung 2"]
     }
     """
-    course_id = payload.course_id
-    chunks = payload.chunks
-    insert_course_chunks(course_id, chunks)
-    return {"status": "ok", "course_id": course_id, "chunks_count": len(chunks)}
+    try:
+        course_id = payload.course_id
+        chunks = payload.chunks
+        insert_course_chunks(course_id, chunks)
+        return {"status": "ok", "course_id": course_id, "chunks_count": len(chunks)}
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 @app.post("/ask")
 def ask(query: str):
