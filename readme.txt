@@ -1,3 +1,31 @@
+LASTEST
+
+course_rag_pipeline.py
+main.py
+AskPayload.py
+InsertPayload.py
+rag_service.py
+
+
+
+
+
+
+
+
+
+
+
+========================================================================================================
+
+
+
+
+
+
+
+
+
 👉 Nếu bạn định chạy embedding local (dùng sentence-transformers) thay vì OpenAI API, thì chỉ cần thêm:
 
 sentence-transformers==2.7.0
