@@ -8,7 +8,7 @@ load_dotenv()
 
 # 1️⃣ Kết nối Milvus
 #connections.connect("default", host="localhost", port="19530")
-connections.connect("default", host=os.getenv("DB_HOST"), port="19530")
+connections.connect("default", host=os.getenv("MILVUS_HOST"), port=os.getenv("MILVUS_PORT"))
 
 # 2️⃣ Tạo schema unified cho cả khóa học & bài học
 def create_course_rag_collection():
