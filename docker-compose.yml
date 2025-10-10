@@ -44,7 +44,10 @@ services:
       - minio
 
   fastapi-app:
-    build: .
+    build:
+    context: .
+    dockerfile: Dockerfile  # tùy chỉnh nếu Dockerfile khác tên
+    image: fastapi-rag:latest  # <- đặt tên image và tag
     container_name: fastapi-rag
     ports:
       - "8000:8000"
