@@ -5,7 +5,7 @@ from rag_service import rag_answer_v2
 from models.requests.InsertPayload import InsertPayload
 from models.requests.AskPayload import AskPayload
 
-from collections.course_rag_pipeline import (
+from modules.course_rag_pipeline import (
     create_course_rag_collection,
     prepare_records,
     insert_data,
