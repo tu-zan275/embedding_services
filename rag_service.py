@@ -70,7 +70,7 @@ def rag_answer_v2(query: str, top_k=3):
     query_clean = preprocessed["query"]
     search_type = preprocessed["type"]
 
-    print(f"llmQuery: {preprocessed["query"]} | {preprocessed["type"]}")
+    print(f"llmQuery: {query_clean} | Type: {search_type}")
 
     # 1️⃣ Semantic search
     results = query_rag(collection, query_clean, limit=top_k, search_type)
