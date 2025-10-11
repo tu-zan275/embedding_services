@@ -2,6 +2,7 @@
 from pymilvus import connections, FieldSchema, CollectionSchema, DataType, Collection, utility
 from sentence_transformers import SentenceTransformer
 import uuid
+import os
 from dotenv import load_dotenv
 
 load_dotenv()
