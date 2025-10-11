@@ -145,9 +145,20 @@ def insert_data(collection, records):
     print(f"✅ Đã insert {len(records)} records vào Milvus")
 
 
-# 7️⃣ Tìm kiếm RAG (semantic query)
+# =====================
+# QUERY RAG — optimized
+# =====================
 def query_rag(collection, query, filter_expr=None, limit=5):
+    """
+    Tìm kiếm ngữ nghĩa (semantic search) trên Milvus.
+    Trả về danh sách dict dễ dùng cho API.
+    """
     q_emb = embed_text(query)
+
+    # ✅ Đảm bảo collection đã load trước khi search
+    if not collection.has_loaded():
+        collection.load()
+
     results = collection.search(
         data=[q_emb],
         anns_field="embedding",
@@ -156,9 +167,25 @@ def query_rag(collection, query, filter_expr=None, limit=5):
         expr=filter_expr,
         output_fields=["type", "course_title", "lesson_title", "author", "url", "content"]
     )
+
+    hits = []
     print(f"\n🔍 Query: {query}\n")
     for hit in results[0]:
-        print(f"[{hit.entity.get('type').upper()}] {hit.entity.get('course_title')} → {hit.entity.get('lesson_title')}")
-        print(f"Tác giả: {hit.entity.get('author')} | URL: {hit.entity.get('url')}")
-        print(f"Nội dung: {hit.entity.get('content')[:100]}...\n")
+        item = {
+            "score": hit.score,
+            "type": hit.entity.get("type"),
+            "course_title": hit.entity.get("course_title"),
+            "lesson_title": hit.entity.get("lesson_title"),
+            "author": hit.entity.get("author"),
+            "url": hit.entity.get("url"),
+            "content": hit.entity.get("content"),
+        }
+        hits.append(item)
 
+        # Log ngắn gọn
+        print(f"[{item['type'].upper()}] {item['course_title']} → {item['lesson_title']}")
+        print(f"Tác giả: {item['author']} | URL: {item['url']}")
+        print(f"Nội dung: {item['content'][:100]}...\n")
+
+    print(f"✅ Tổng số kết quả: {len(hits)}\n")
+    return hits

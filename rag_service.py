@@ -63,17 +63,16 @@ Hãy trả lời ngắn gọn, chính xác, và chỉ dựa vào thông tin trê
     }
 
 def rag_answer_v2(query: str, top_k=3):
-    # 1️⃣ Lấy dữ liệu từ Milvus
     collection = Collection("course_rag")
 
-    # 2️⃣ Gọi query_rag() để tìm kết quả semantic
+    # 1️⃣ Semantic search
     results = query_rag(collection, query, limit=top_k)
 
-    # 3️⃣ Nếu không có kết quả → fallback
-    if not results or not results[0]:
+    # 2️⃣ Fallback khi không tìm thấy gì
+    if not results:
         fallback_prompt = f"""
         Người dùng hỏi: "{query}".
-        Tôi không tìm thấy thông tin nào liên quan trong cơ sở dữ liệu khóa học.
+        Tôi không tìm thấy thông tin nào trong cơ sở dữ liệu khóa học.
         Hãy trả lời lịch sự và gợi ý người dùng thử câu hỏi khác.
         """
         response = client.chat.completions.create(
@@ -87,25 +86,18 @@ def rag_answer_v2(query: str, top_k=3):
             "found": False
         }
 
-    # 4️⃣ Chuẩn bị context từ kết quả search
+    # 3️⃣ Chuẩn bị context
     contexts = []
-    for hit in results[0]:
-        item_type = hit.entity.get("type") or ""
-        course_title = hit.entity.get("course_title") or ""
-        lesson_title = hit.entity.get("lesson_title") or ""
-        author = hit.entity.get("author") or ""
-        url = hit.entity.get("url") or ""
-        content = hit.entity.get("content") or ""
-
-        ctx = f"[{item_type.upper()}] {course_title}"
-        if lesson_title:
-            ctx += f" → {lesson_title}"
-        ctx += f"\nTác giả: {author}\nURL: {url}\nNội dung: {content}"
+    for hit in results:
+        ctx = f"[{hit['type'].upper()}] {hit['course_title']}"
+        if hit["lesson_title"]:
+            ctx += f" → {hit['lesson_title']}"
+        ctx += f"\nTác giả: {hit['author']}\nURL: {hit['url']}\nNội dung: {hit['content']}"
         contexts.append(ctx)
 
-    context_text = "\n\n".join(contexts)[:4000]  # tránh quá dài
+    context_text = "\n\n".join(contexts)[:4000]
 
-    # 5️⃣ Nhận diện intent đơn giản
+    # 4️⃣ Nhận diện intent đơn giản
     query_lower = query.lower()
     if "giá" in query_lower or "bao nhiêu" in query_lower:
         task_type = "price"
@@ -116,7 +108,7 @@ def rag_answer_v2(query: str, top_k=3):
     else:
         task_type = "general"
 
-    # 6️⃣ Sinh prompt chính
+    # 5️⃣ Sinh prompt chính
     prompt = f"""
     Bạn là trợ lý AI của hệ thống khóa học.
     Người dùng hỏi: "{query}"
@@ -126,7 +118,6 @@ def rag_answer_v2(query: str, top_k=3):
 
     Nhiệm vụ: Trả lời ngắn gọn, rõ ràng, chỉ dựa vào thông tin trên.
     """
-
     if task_type == "price":
         prompt += "\nNếu có thông tin về giá, hãy nêu cụ thể. Nếu không, nói 'không có thông tin về giá'."
     elif task_type == "author":
@@ -134,7 +125,7 @@ def rag_answer_v2(query: str, top_k=3):
     elif task_type == "lessons":
         prompt += "\nNếu có danh sách bài học, hãy tóm tắt số lượng và tiêu đề các bài học chính."
 
-    # 7️⃣ Gọi OpenAI để sinh câu trả lời
+    # 6️⃣ Gọi OpenAI để sinh câu trả lời
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "user", "content": prompt}]
