@@ -155,10 +155,6 @@ def query_rag(collection, query, filter_expr=None, limit=5):
     """
     q_emb = embed_text(query)
 
-    # ✅ Đảm bảo collection đã load trước khi search
-    if not collection.has_loaded():
-        collection.load()
-
     results = collection.search(
         data=[q_emb],
         anns_field="embedding",
