@@ -3,7 +3,7 @@ from embedding import get_embedding
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
-from collections.course_rag_pipeline import query_rag  # ✅ import lại hàm
+from modules.course_rag_pipeline import query_rag  # ✅ import lại hàm
 
 #from special_contexts import special_contexts
 
