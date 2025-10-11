@@ -19,7 +19,9 @@ app = FastAPI()
 # Domain frontend
 origins = [
     "https://reviewkhoahoc.net",
+    "https://cms.reviewkhoahoc.net",
     "http://localhost:3000",  # nếu bạn test local
+    "http://localhost:5000",  # nếu bạn test local
 ]
 
 app.add_middleware(
