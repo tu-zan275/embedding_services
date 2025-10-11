@@ -148,7 +148,7 @@ def insert_data(collection, records):
 # =====================
 # QUERY RAG — optimized
 # =====================
-def query_rag(collection, query, filter_expr=None, limit=5):
+def query_rag_v1(collection, query, filter_expr=None, limit=5):
     """
     Tìm kiếm ngữ nghĩa (semantic search) trên Milvus.
     Trả về danh sách dict dễ dùng cho API.
@@ -185,3 +185,151 @@ def query_rag(collection, query, filter_expr=None, limit=5):
 
     print(f"✅ Tổng số kết quả: {len(hits)}\n")
     return hits
+
+
+def query_rag(collection, query, filter_expr=None, limit=5, input_search_type):
+    """
+    Truy vấn semantic search trên Milvus.
+    - Nếu query mang tính tổng quan -> tìm 'course'
+    - Nếu query mang tính chi tiết về bài học -> tìm 'lesson'
+    """
+
+    query_lower = query.lower()
+
+    lesson_keywords = ["bài học", "lesson", "chương", "phần", "nội dung", "cách học", "hướng dẫn", "ví dụ"]
+
+    # if any(k in query_lower for k in lesson_keywords):
+    #     search_type = "lesson"
+    # else:
+    #     search_type = "course"
+
+    search_type = input_search_type
+
+    q_emb = embed_text(query)
+
+    expr = f"type == '{search_type}'"
+    if filter_expr:
+        expr += f" and {filter_expr}"
+
+    results = collection.search(
+        data=[q_emb],
+        anns_field="embedding",
+        param={"metric_type": "IP", "params": {"nprobe": 8}},
+        limit=limit,
+        expr=expr,
+        output_fields=[
+            "type", "course_title", "lesson_title",
+            "author", "category", "url", "content"
+        ]
+    )
+
+    hits = []
+    print(f"\n🔍 Query: {query}  →  Tìm trong: {search_type.upper()}\n")
+
+    for hit in results[0]:
+        entity = hit.entity
+        item = {
+            "score": round(hit.score, 4),
+            "type": entity.get("type"),
+            "course_title": entity.get("course_title"),
+            "lesson_title": entity.get("lesson_title"),
+            "author": entity.get("author"),
+            "category": entity.get("category"),
+            "url": entity.get("url"),
+            "content": entity.get("content"),
+        }
+        hits.append(item)
+
+        label = item["lesson_title"] if item["type"] == "lesson" else item["course_title"]
+        print(f"[{item['type'].upper()}] {item['course_title']} → {item['lesson_title'] or 'N/A'}")
+        print(f"Tác giả: {item['author']} | URL: {item['url']}")
+        print(f"Nội dung: {item['content'][:120]}...\n")
+
+    print(f"✅ Tổng kết quả: {len(hits)}\n")
+    return hits
+
+
+## V3
+# import numpy as np
+
+# # =====================================
+# # 🧩 Huấn luyện sơ bộ hướng câu hỏi
+# # =====================================
+# course_examples = [
+#     "Khóa học này nói về gì?",
+#     "Ai là giảng viên của khóa học?",
+#     "Tôi nên học khóa nào về Python?",
+#     "Khóa học nào giúp tôi nâng cao kỹ năng lập trình?",
+# ]
+
+# lesson_examples = [
+#     "Bài học đầu tiên dạy cái gì?",
+#     "Trong chương 2 có hướng dẫn thực hành không?",
+#     "Nội dung của bài học này là gì?",
+#     "Bài 3 nói về cách cài đặt ra sao?",
+# ]
+
+# course_query_vector = np.mean([embed_text(q) for q in course_examples], axis=0)
+# lesson_query_vector = np.mean([embed_text(q) for q in lesson_examples], axis=0)
+
+
+# # =====================================
+# # 🚀 Hàm query chính
+# # =====================================
+# def query_rag(collection, query, filter_expr=None, limit=5):
+#     """
+#     Tìm kiếm semantic RAG trên Milvus, tự nhận diện loại câu hỏi.
+#     """
+#     q_emb = embed_text(query)
+
+#     # 1️⃣ Phân loại câu hỏi bằng cosine similarity
+#     def cosine_sim(a, b):
+#         return np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b))
+
+#     sim_course = cosine_sim(q_emb, course_query_vector)
+#     sim_lesson = cosine_sim(q_emb, lesson_query_vector)
+#     search_type = "lesson" if sim_lesson > sim_course else "course"
+
+#     # 2️⃣ Chuẩn bị filter
+#     expr = f"type == '{search_type}'"
+#     if filter_expr:
+#         expr += f" and {filter_expr}"
+
+#     # 3️⃣ Truy vấn Milvus
+#     results = collection.search(
+#         data=[q_emb],
+#         anns_field="embedding",
+#         param={"metric_type": "IP", "params": {"nprobe": 8}},
+#         limit=limit,
+#         expr=expr,
+#         output_fields=[
+#             "type", "course_title", "lesson_title",
+#             "author", "category", "url", "content"
+#         ]
+#     )
+
+#     # 4️⃣ Kết quả
+#     hits = []
+#     print(f"\n🔍 Query: {query}")
+#     print(f"🤖 Phân loại: {search_type.upper()} (sim_course={sim_course:.3f}, sim_lesson={sim_lesson:.3f})\n")
+
+#     for hit in results[0]:
+#         e = hit.entity
+#         hits.append({
+#             "score": round(hit.score, 4),
+#             "type": e.get("type"),
+#             "course_title": e.get("course_title"),
+#             "lesson_title": e.get("lesson_title"),
+#             "author": e.get("author"),
+#             "category": e.get("category"),
+#             "url": e.get("url"),
+#             "content": e.get("content"),
+#         })
+
+#         # Log ngắn
+#         print(f"[{e.get('type').upper()}] {e.get('course_title')} → {e.get('lesson_title') or 'N/A'}")
+#         print(f"URL: {e.get('url')}")
+#         print(f"Nội dung: {e.get('content')[:120]}...\n")
+
+#     print(f"✅ Tổng: {len(hits)} kết quả\n")
+#     return hits

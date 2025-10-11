@@ -65,8 +65,15 @@ Hãy trả lời ngắn gọn, chính xác, và chỉ dựa vào thông tin trê
 def rag_answer_v2(query: str, top_k=3):
     collection = Collection("course_rag")
 
+    preprocessed = preprocess_query_with_llm(query)
+
+    query_clean = preprocessed["query"]
+    search_type = preprocessed["type"]
+
+    print(f"llmQuery: {preprocessed["query"]} | {preprocessed["type"]}")
+
     # 1️⃣ Semantic search
-    results = query_rag(collection, query, limit=top_k)
+    results = query_rag(collection, query_clean, limit=top_k, search_type)
 
     # 2️⃣ Fallback khi không tìm thấy gì
     if not results:
@@ -138,3 +145,41 @@ def rag_answer_v2(query: str, top_k=3):
         "found": True,
         "task_type": task_type
     }
+
+
+def preprocess_query_with_llm(query: str) -> dict:
+    """
+    Chuẩn hóa query và phân loại type ('course' hoặc 'lesson') bằng LLM.
+    Trả về dict: {"query": normalized_query, "type": "course"|"lesson"}
+    """
+    prompt = f"""
+    Bạn là một trợ lý AI. 
+    1. Viết lại câu hỏi sau cho ngắn gọn, chuẩn hóa, loại bỏ các từ dư thừa nhưng vẫn giữ nguyên ý nghĩa.
+    2. Phân loại câu hỏi này thành 'course' (tổng quan khóa học) hoặc 'lesson' (câu hỏi chi tiết bài học).
+    
+    Trả về JSON duy nhất với 2 key: 
+    {{
+        "query": "câu hỏi đã chuẩn hóa",
+        "type": "course" hoặc "lesson"
+    }}
+    
+    Câu hỏi: "{query}"
+    """
+
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0
+    )
+
+    try:
+        import json
+        json_text = response.choices[0].message.content.strip()
+        result = json.loads(json_text)
+        # fallback kiểm tra type
+        if result.get("type") not in ["course", "lesson"]:
+            result["type"] = "course"
+        return result
+    except Exception as e:
+        # fallback nếu JSON lỗi
+        return {"query": query, "type": "course"}
