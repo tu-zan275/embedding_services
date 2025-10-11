@@ -1,6 +1,7 @@
 
 # main.py
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from rag_service import rag_answer_v2
 from models.requests.InsertPayload import InsertPayload
 from models.requests.AskPayload import AskPayload
@@ -14,6 +15,20 @@ from modules.course_rag_pipeline import (
 )
 
 app = FastAPI()
+
+# Domain frontend
+origins = [
+    "https://reviewkhoahoc.net",
+    "http://localhost:3000",  # nếu bạn test local
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,      # Domain cho phép
+    allow_credentials=True,
+    allow_methods=["*"],        # GET, POST, PUT, DELETE, OPTIONS
+    allow_headers=["*"],        # Authorization, Content-Type, v.v.
+)
 
 # 1️⃣ Khởi tạo collection (chỉ chạy 1 lần)
 collection = create_course_rag_collection()
