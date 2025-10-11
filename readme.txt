@@ -10,6 +10,9 @@ rag_service.py
 
 
 
+rebuild API
+docker compose build --no-cache fastapi-app
+docker compose up -d fastapi-app
 
 
 
