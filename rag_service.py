@@ -73,7 +73,7 @@ def rag_answer_v2(query: str, top_k=3):
     print(f"llmQuery: {query_clean} | Type: {search_type}")
 
     # 1️⃣ Semantic search
-    results = query_rag(collection, query_clean, limit=top_k, search_type)
+    results = query_rag(collection, query_clean, limit=top_k, input_search_type=search_type)
 
     # 2️⃣ Fallback khi không tìm thấy gì
     if not results:

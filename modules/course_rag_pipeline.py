@@ -187,7 +187,7 @@ def query_rag_v1(collection, query, filter_expr=None, limit=5):
     return hits
 
 
-def query_rag(collection, query, filter_expr=None, limit=5, input_search_type):
+def query_rag(collection, query, filter_expr=None, limit=5, input_search_type="course"):
     """
     Truy vấn semantic search trên Milvus.
     - Nếu query mang tính tổng quan -> tìm 'course'
