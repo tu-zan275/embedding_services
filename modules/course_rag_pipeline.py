@@ -16,28 +16,35 @@ def create_course_rag_collection():
     collection_name = "course_rag"
     if utility.has_collection(collection_name):
         print("Collection đã tồn tại, skip tạo.")
-        return Collection(collection_name)
+        collection = Collection(collection_name)
+    else:
+        fields = [
+            FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64),
+            FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=768),
+            FieldSchema(name="type", dtype=DataType.VARCHAR, max_length=10),
+            FieldSchema(name="course_id", dtype=DataType.VARCHAR, max_length=64),
+            FieldSchema(name="course_title", dtype=DataType.VARCHAR, max_length=256),
+            FieldSchema(name="lesson_id", dtype=DataType.VARCHAR, max_length=64),
+            FieldSchema(name="lesson_title", dtype=DataType.VARCHAR, max_length=256),
+            FieldSchema(name="author", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="category", dtype=DataType.VARCHAR, max_length=128),
+            FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=65535),
+            FieldSchema(name="url", dtype=DataType.VARCHAR, max_length=512),
+        ]
+        schema = CollectionSchema(fields, description="Unified RAG schema for courses and lessons")
+        collection = Collection(name=collection_name, schema=schema)
 
-    fields = [
-        FieldSchema(name="id", dtype=DataType.VARCHAR, is_primary=True, max_length=64),
-        FieldSchema(name="embedding", dtype=DataType.FLOAT_VECTOR, dim=768),
-        FieldSchema(name="type", dtype=DataType.VARCHAR, max_length=10),  # 'course' hoặc 'lesson'
-        FieldSchema(name="course_id", dtype=DataType.VARCHAR, max_length=64),
-        FieldSchema(name="course_title", dtype=DataType.VARCHAR, max_length=256),
-        FieldSchema(name="lesson_id", dtype=DataType.VARCHAR, max_length=64),
-        FieldSchema(name="lesson_title", dtype=DataType.VARCHAR, max_length=256),
-        FieldSchema(name="author", dtype=DataType.VARCHAR, max_length=128),
-        FieldSchema(name="category", dtype=DataType.VARCHAR, max_length=128),
-        FieldSchema(name="content", dtype=DataType.VARCHAR, max_length=65535),
-        FieldSchema(name="url", dtype=DataType.VARCHAR, max_length=512),
-    ]
-    schema = CollectionSchema(fields, description="Unified RAG schema for courses and lessons")
-    collection = Collection(name=collection_name, schema=schema)
+        index_params = {"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": 128}}
+        collection.create_index(field_name="embedding", index_params=index_params)
+        print("✅ Collection created:", collection_name)
 
-    # Tạo index vector để search nhanh
-    index_params = {"index_type": "IVF_FLAT", "metric_type": "IP", "params": {"nlist": 128}}
-    collection.create_index(field_name="embedding", index_params=index_params)
-    print("✅ Collection created:", collection_name)
+    # 🔥 Load collection vào RAM để có thể search
+    try:
+        collection.load()
+        print("✅ Collection loaded vào RAM.")
+    except Exception as e:
+        print("⚠️ Load collection thất bại:", e)
+
     return collection
 
 #embed_query = SentenceTransformer("intfloat/multilingual-e5-small")  # dùng cho truy vấn
