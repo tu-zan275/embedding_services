@@ -62,7 +62,7 @@ Hãy trả lời ngắn gọn, chính xác, và chỉ dựa vào thông tin trê
         "answer": response.choices[0].message.content
     }
 
-def rag_answer_v2(query: str, top_k=3):
+def rag_answer_v2(query: str, top_k=10):
     collection = Collection("course_rag")
 
     preprocessed = preprocess_query_with_llm(query)
@@ -72,10 +72,12 @@ def rag_answer_v2(query: str, top_k=3):
 
     print(f"llmQuery: {query_clean} | Type: {search_type}")
 
-    # 1️⃣ Semantic search
+    # Semantic search
     results = query_rag(collection, query_clean, limit=top_k, input_search_type=search_type)
 
-    # 2️⃣ Fallback khi không tìm thấy gì
+    results = [r for r in results if r.get("score", 0) > 0.25]
+
+    # Fallback khi không tìm thấy gì
     if not results:
         fallback_prompt = f"""
         Người dùng hỏi: "{query}".
@@ -93,7 +95,7 @@ def rag_answer_v2(query: str, top_k=3):
             "found": False
         }
 
-    # 3️⃣ Chuẩn bị context
+    # Chuẩn bị context
     contexts = []
     for hit in results:
         ctx = f"[{hit['type'].upper()}] {hit['course_title']}"
