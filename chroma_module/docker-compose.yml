@@ -5,8 +5,8 @@ services:
     image: chromadb/chroma:latest
     container_name: chroma
     environment:
-      - IS_PERSISTENT=TRUE
-      - PERSIST_DIRECTORY=/chroma/chroma
+      IS_PERSISTENT: "TRUE"
+      PERSIST_DIRECTORY: /chroma/chroma
     volumes:
       - chroma_data:/chroma/chroma
     networks:
@@ -17,9 +17,11 @@ services:
     image: nginx:alpine
     container_name: chroma_proxy
     ports:
-      - "7985:80"
+      - "7985:80"   # 🌍 expose ra Internet
     depends_on:
       - chroma
+    environment:
+      CHROMA_API_KEY: "YOUR_SECRET_API_KEY"
     networks:
       - chroma_net
     restart: unless-stopped
@@ -31,7 +33,7 @@ services:
       http {
         map \$http_x_api_key \$authorized {
           default 0;
-          YOUR_SECRET_API_KEY 1;
+          ${CHROMA_API_KEY} 1;
         }
 
         server {
