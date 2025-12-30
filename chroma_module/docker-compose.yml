@@ -17,7 +17,7 @@ services:
     image: nginx:alpine
     container_name: chroma_proxy
     ports:
-      - "7985:80"   # 🌍 expose ra Internet
+      - "7985:80"
     depends_on:
       - chroma
     environment:
