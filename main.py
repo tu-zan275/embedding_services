@@ -70,7 +70,6 @@ def search(payload: AskPayload):
             "query": result["query"],
             "found": result["found"],
             "results": result["results"],
-            "contexts": result["contexts"]
         }
     except Exception as e:
         return {"status": "error", "detail": str(e)}

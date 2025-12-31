@@ -152,6 +152,7 @@ def rag_search(query: str, top_k=10):
     collection = Collection("course_rag")
 
     # Semantic search
+    #lesson
     results = query_rag(collection, query, limit=top_k)
 
     results = [r for r in results if r.get("score", 0) > 0.25]
