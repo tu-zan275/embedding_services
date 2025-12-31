@@ -148,6 +148,28 @@ def rag_answer_v2(query: str, top_k=10):
         "task_type": task_type
     }
 
+def rag_search(query: str, top_k=10):
+    collection = Collection("course_rag")
+
+    # Semantic search
+    results = query_rag(collection, query, limit=top_k)
+
+    results = [r for r in results if r.get("score", 0) > 0.25]
+
+    # Fallback khi không tìm thấy gì
+    if not results:
+        return {
+            "query": query,
+            "results": [],
+            "found": False
+        }
+
+    return {
+        "query": query,
+        "results": results,
+        "found": True,
+    }
+
 
 def preprocess_query_with_llm(query: str) -> dict:
     """

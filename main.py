@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from rag_service import rag_answer_v2
+from rag_service import rag_search
 from models.requests.InsertPayload import InsertPayload
 from models.requests.AskPayload import AskPayload
 
@@ -59,6 +60,20 @@ collection = create_course_rag_collection()
 @app.get("/")
 def root():
     return {"status": "ok", "message": "RAG API is running"}
+
+@app.post("/search")
+def search(payload: AskPayload):
+    try:
+        result = rag_search(payload.query, top_k=payload.top_k)
+        return {
+            "status": "ok",
+            "query": result["query"],
+            "found": result["found"],
+            "results": result["results"],
+            "contexts": result["contexts"]
+        }
+    except Exception as e:
+        return {"status": "error", "detail": str(e)}
 
 @app.post("/insert")
 def insert(payload: InsertPayload):
